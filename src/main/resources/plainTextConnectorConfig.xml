@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<TextFileConfiguration>
+    <FilePath>inputCBRCases.txt</FilePath>
+    <Delimiters>,</Delimiters>
+    <DescriptionClassName>org.uclab.mm.kcl.edket.algoselector.representation.CaseDescription</DescriptionClassName>
+    <DescriptionMappings>
+        <Map>CaseID</Map>
+        <Map>Attributes</Map>
+        <Map>NominalAttributes</Map>
+        <Map>NumericAttributes</Map>
+        <Map>BinaryAttributes</Map>
+        <Map>Classes</Map>
+        <Map>InstanceCount</Map>
+        <Map>Missing</Map>
+    </DescriptionMappings>
+    <SolutionClassName>org.uclab.mm.kcl.edket.algoselector.representation.SolutionDescription</SolutionClassName>
+    <SolutionMappings>
+        <Map>CaseId</Map>
+        <Map>Algorithm</Map>
+    </SolutionMappings>
+</TextFileConfiguration>
