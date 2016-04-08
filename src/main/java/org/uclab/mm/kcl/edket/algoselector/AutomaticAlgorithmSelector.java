@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.uclab.mm.kcl.edket.algoselector.representation.SolutionDescription;
 import org.uclab.mm.kcl.edket.algoselector.ui.AlgoSelectorUI;
 
 import jcolibri.cbraplications.StandardCBRApplication;
@@ -27,7 +28,7 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     QueryManager queryManager;
     SimilarityManager similarityManager;
     
-    public static final int TOP_K_RESULTS = 2;
+    public static final int TOP_K_RESULTS = 3;
     
     public AutomaticAlgorithmSelector(){
         this(null, null);
@@ -89,8 +90,23 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
         CBRQuery query = queryManager.getQuery(AlgoSelectorUI.getInstance());
         cycle(query);
     }
+    
     private void showSelectedCases(Collection<RetrievalResult> eval, Collection<CBRCase> selected) {
-        // TODO print selected case
-        LOG.info("Un Implemented Method[showSelectedCases]");
+        System.err.println("\nTop [" + TOP_K_RESULTS + "] Selected Cases\n");
+        for(CBRCase c : selected){
+            System.err.println(c);
+        }
+        
+        System.out.println("\nAll retrieved Cases\n");
+        for(RetrievalResult rr: eval) {
+                SolutionDescription matchsimpleSolution = (SolutionDescription) rr.get_case().getSolution();
+                double similarity = rr.getEval();
+                String algo = matchsimpleSolution.getAlgorithm();
+                System.out.println("algorithm: " + algo + ", similarity: " + similarity);
+        }
+        System.out.println("\n\nDetail view of Retrieved cases:\n");
+        for(RetrievalResult retrievedCase: eval) {
+           System.out.println(retrievedCase + "\n");
+        }       
     }
 }

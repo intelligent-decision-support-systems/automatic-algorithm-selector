@@ -5,18 +5,6 @@ import jcolibri.cbrcore.CaseComponent;
 
 public class SolutionDescription implements CaseComponent {
 
-    /* Generated Class. Please Do Not Modify... */
-
-    private java.lang.Integer CaseId;
-
-    public java.lang.Integer getCaseId() {
-        return CaseId;
-    }
-
-    public void setCaseId(java.lang.Integer CaseId8) {
-        this.CaseId = CaseId8;
-    }
-
     private java.lang.String Algorithm;
 
     public java.lang.String getAlgorithm() {
@@ -29,11 +17,11 @@ public class SolutionDescription implements CaseComponent {
 
     @Override
     public Attribute getIdAttribute() {
-        return new Attribute("CaseId", this.getClass());
+        return new Attribute("Algorithm", this.getClass());
     }
 
     public String toString() {
-        return "[" + CaseId + " , " + Algorithm + "]";
+        return "[" + Algorithm + "]";
     }
 
 }
