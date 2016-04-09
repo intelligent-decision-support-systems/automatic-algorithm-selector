@@ -5,7 +5,7 @@ Automatic Algorithm Selection Using Case Based Reasoning
 `jColibri v2.1` 
 
 #### Prerequisites
-* donwload `jColibri v2.1` 
+* download `jColibri v2.1` 
 * create `lib` directory inside the root directory and add jColibri v2.1 inside that directory e.g. `lib/jcolibri2.jar`
 
 #### How to Build and Run
