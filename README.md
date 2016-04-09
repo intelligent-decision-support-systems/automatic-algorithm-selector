@@ -11,3 +11,7 @@ Automatic Algorithm Selection Using Case Based Reasoning
 #### How to Build and Run
 * run `mvn clean install` from root directory
 * run `startup.sh` file
+
+OR
+
+* using eclipse import as a `maven project` and run `Application.java` class
