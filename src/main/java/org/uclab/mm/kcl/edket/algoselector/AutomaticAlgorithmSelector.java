@@ -1,13 +1,10 @@
 package org.uclab.mm.kcl.edket.algoselector;
 
 import java.util.Collection;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.uclab.mm.kcl.edket.algoselector.representation.SolutionDescription;
-import org.uclab.mm.kcl.edket.algoselector.ui.AlgoSelectorUI;
+import java.util.HashMap;
 
 import jcolibri.cbraplications.StandardCBRApplication;
+import jcolibri.cbrcore.Attribute;
 import jcolibri.cbrcore.CBRCase;
 import jcolibri.cbrcore.CBRCaseBase;
 import jcolibri.cbrcore.CBRQuery;
@@ -18,6 +15,13 @@ import jcolibri.method.retrieve.RetrievalResult;
 import jcolibri.method.retrieve.NNretrieval.NNConfig;
 import jcolibri.method.retrieve.NNretrieval.NNScoringMethod;
 import jcolibri.method.retrieve.selection.SelectCases;
+import jcolibri.method.reuse.CombineQueryAndCasesMethod;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.uclab.mm.kcl.edket.algoselector.representation.CaseDescription;
+import org.uclab.mm.kcl.edket.algoselector.representation.SolutionDescription;
+import org.uclab.mm.kcl.edket.algoselector.ui.AlgoSelectorUI;
 
 public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     private static Logger LOG = LogManager.getLogger(AutomaticAlgorithmSelector.class);
@@ -62,10 +66,7 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     @Override
     public void cycle(CBRQuery cbrQuery) throws ExecutionException {
         NNConfig simConfig = similarityManager.getSimilarityConfig(AlgoSelectorUI.getInstance());
-        Collection<RetrievalResult> eval = NNScoringMethod.evaluateSimilarity(casebase.getCases(), cbrQuery, simConfig);
-        Collection<CBRCase> selectedcases = SelectCases.selectTopK(eval, TOP_K_RESULTS);
-        
-        showSelectedCases(eval, selectedcases);
+        doPerformCBRSteps(cbrQuery, simConfig);
     }
 
     @Override
@@ -89,6 +90,54 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     public void buildRecommendation() throws ExecutionException {
         CBRQuery query = queryManager.getQuery(AlgoSelectorUI.getInstance());
         cycle(query);
+    }
+    
+    private void doPerformCBRSteps(CBRQuery query, NNConfig simConfig) throws ExecutionException{
+        
+        /********* Execute NN ************/
+        Collection<RetrievalResult> eval = NNScoringMethod.evaluateSimilarity(casebase.getCases(), query, simConfig);
+        
+        /********* Select cases **********/
+        Collection<CBRCase> selectedcases = SelectCases.selectTopK(eval, TOP_K_RESULTS);
+        System.err.println("\nRETRIEVE:  Similar cases\n");
+        for(RetrievalResult rr : eval){
+            if(selectedcases.contains(rr.get_case())){
+                CaseDescription retrievedCase = (CaseDescription) rr.get_case().getDescription();
+                
+                String description = retrievedCase.toString();
+                System.out.print(rr.get_case());
+                System.out.println(" sim: " + rr.getEval());
+            }
+        }
+        System.out.println();
+        /********* Reuse **********/
+        
+        //Combine query description with cases solutions, obtaining a list of new cases.
+        Collection<CBRCase> newcases = CombineQueryAndCasesMethod.combine(query, selectedcases);
+        System.err.println("REUSE: Map the solution from the previous case to the target problem, Combined cases\n");
+        for(jcolibri.cbrcore.CBRCase c: newcases){
+            System.out.println(c);
+            CaseDescription cd = (CaseDescription) c.getDescription();
+            System.out.println(cd);
+        }
+        /********* Revise **********/
+        // Lets store only the best case
+        CBRCase bestCase = newcases.iterator().next();
+        Integer newCaseId = casebase.getCases().size() + 1;
+        
+        // Define new ids for the compound attributes
+        HashMap<Attribute, Object> componentsKeys = new HashMap<Attribute, Object>();
+        componentsKeys.put(new Attribute("CaseID", CaseDescription.class), newCaseId);  
+        jcolibri.method.revise.DefineNewIdsMethod.defineNewIdsMethod(bestCase, componentsKeys);
+               
+        System.err.println("\nREVISE: Cases with new Id");
+        System.err.println("do you want to RETAIN this solution?");
+        System.out.println(bestCase);
+        
+        /********* Retain **********/
+        System.err.println("RETAIN: Save Case for future use?");
+        // Uncomment next line to store cases into persistence
+        //jcolibri.method.retain.StoreCasesMethod.storeCase(casebase, bestCase);
     }
     
     private void showSelectedCases(Collection<RetrievalResult> eval, Collection<CBRCase> selected) {

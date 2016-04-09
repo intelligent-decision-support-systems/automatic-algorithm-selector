@@ -96,7 +96,7 @@ public class AlgoSelectorUI {
      */
     private void initialize() {
         frmSmartalgorecommender = new JFrame();
-        frmSmartalgorecommender.setTitle("SmartAlgoRecommender");
+        frmSmartalgorecommender.setTitle("Automatic Algorithm Selector v1.0");
         frmSmartalgorecommender.setBounds(100, 100, 800, 600);
         frmSmartalgorecommender.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
