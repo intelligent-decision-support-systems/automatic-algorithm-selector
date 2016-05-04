@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<TextFileConfiguration>
+	<FilePath>inputCBRCases.txt</FilePath>
+	<Delimiters>,</Delimiters>
+	<DescriptionClassName>org.uclab.mm.kcl.edket.algoselector.representation.CaseDescription</DescriptionClassName>
+	<DescriptionMappings>
+		<Map>MeanSkewnessOfNumericAtts</Map>
+		<Map>MeanKurtosisOfNumericAtts</Map>
+		<Map>MeanStdDevOfNumericAtts</Map>
+		<Map>MeanMeansOfNumericAtts</Map>
+		<Map>NumAttributes</Map>
+		<Map>Dimensionality</Map>
+		<Map>PercentageOfBinaryAtts</Map>
+		<Map>PercentageOfNominalAtts</Map>
+		<Map>NumNominalAtts</Map>
+		<Map>PercentageOfNumericAtts</Map>
+		<Map>NumNumericAtts</Map>
+		<Map>NumBinaryAtts</Map>
+		<Map>ClassCount</Map>
+		<Map>NegativePercentage</Map>
+		<Map>PositivePercentage</Map>
+		<Map>DefaultAccuracy</Map>
+		<Map>IncompleteInstanceCount</Map>
+		<Map>InstanceCount</Map>
+		<Map>NumMissingValues</Map>
+		<Map>PercentageOfMissingValues</Map>
+		<Map>MeanNominalAttDistinctValues</Map>
+		<Map>StdvNominalAttDistinctValues</Map>
+		<Map>MinNominalAttDistinctValues</Map>
+		<Map>MaxNominalAttDistinctValues</Map>
+		<Map>ClassEntropy</Map>
+		<Map>MeanMutualInformation</Map>
+		<Map>NoiseToSignalRatio</Map>
+		<Map>MeanAttributeEntropy</Map>
+		<Map>EquivalentNumberOfAtts</Map>
+	</DescriptionMappings>
+	<SolutionClassName>org.uclab.mm.kcl.edket.algoselector.representation.SolutionDescription</SolutionClassName>
+	<SolutionMappings>
+		<Map>Algorithm</Map>
+	</SolutionMappings>
+</TextFileConfiguration>

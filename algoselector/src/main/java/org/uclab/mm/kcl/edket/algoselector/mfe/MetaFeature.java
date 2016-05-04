@@ -1,0 +1,33 @@
+package org.uclab.mm.kcl.edket.algoselector.mfe;
+
+public enum MetaFeature {
+    MeanSkewnessOfNumericAtts,
+    MeanKurtosisOfNumericAtts,
+    MeanStdDevOfNumericAtts,
+    MeanMeansOfNumericAtts,
+    NumAttributes,
+    Dimensionality,
+    PercentageOfBinaryAtts,
+    PercentageOfNominalAtts,
+    NumNominalAtts,
+    PercentageOfNumericAtts,
+    NumNumericAtts,
+    NumBinaryAtts,
+    ClassCount,
+    NegativePercentage,
+    PositivePercentage,
+    DefaultAccuracy,
+    IncompleteInstanceCount,
+    InstanceCount,
+    NumMissingValues,
+    PercentageOfMissingValues,
+    MeanNominalAttDistinctValues,
+    StdvNominalAttDistinctValues,
+    MinNominalAttDistinctValues,
+    MaxNominalAttDistinctValues,
+    ClassEntropy,
+    MeanMutualInformation,
+    NoiseToSignalRatio,
+    MeanAttributeEntropy,
+    EquivalentNumberOfAtts;
+}
