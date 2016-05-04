@@ -1,116 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project>
 	<modelVersion>4.0.0</modelVersion>
-
-	<groupId>org.uclab.mm.kcl.edket.algoselector</groupId>
+	<groupId>org.uclab.mm.kcl.edket</groupId>
 	<artifactId>automatic-algorithm-selector</artifactId>
-	<version>v1.0.0</version>
-	<packaging>jar</packaging>
+	<version>v1.0</version>
+	<packaging>pom</packaging>
 
-	<name>automatic-algorithm-selector</name>
-	<url>http://maven.apache.org</url>
+	<modules>
+	    <module>openml_fantail</module>
+		<module>algoselector</module>
+	</modules>
+</project> 
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>1.7</java.version>
-		<jcolibri.version>2.1</jcolibri.version>
-		<log4j.version>2.3</log4j.version>
-		<jgoodies.forms.version>1.6.0</jgoodies.forms.version>
-	</properties>
-	<dependencies>
-
-		<!-- jcolibri2 dependency -->
-		<dependency>
-			<groupId>jcolibri</groupId>
-			<artifactId>jcolibri</artifactId>
-			<version>${jcolibri.version}</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/jcolibri2.jar</systemPath>
-		</dependency>
-
-		<!-- apache log4j2 dependencies -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		
-		<!-- apache commons 1.2 -->
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.2</version>
-		</dependency>
-
-		<!-- jgoodies form 1.6.0 dependency -->
-		<dependency>
-			<groupId>com.jgoodies</groupId>
-			<artifactId>jgoodies-forms</artifactId>
-			<version>${jgoodies.forms.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-	<build>
-		<resources>
-			<!-- regular resource -->
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-				<excludes>
-					<exclude></exclude>
-				</excludes>
-			</resource>
-		</resources>
-
-		<plugins>
-			<!-- Set compiler level -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<phase>package</phase>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>org.uclab.mm.kcl.edket.algoselector.Application</mainClass>
-								</manifest>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-		<finalName>automatic-algorithm-selector</finalName>
-	</build>
-</project>
