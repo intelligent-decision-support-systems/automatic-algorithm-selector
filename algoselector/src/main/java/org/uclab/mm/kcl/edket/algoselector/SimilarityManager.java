@@ -30,6 +30,7 @@ public class SimilarityManager {
         for(MetaFeature mf : MetaFeature.values()){
             Attribute metaAttribute = new Attribute(mf.name(), CaseDescription.class);
             int interval = intervals.get(mf);
+            if(interval < 1){interval = 1;}
             simConfig.addMapping(metaAttribute, new jcolibri.method.retrieve.NNretrieval.similarity.local.Interval(interval));
             simConfig.setWeight(metaAttribute, weight);
         }

@@ -72,12 +72,16 @@ public class AlgorithmSelectionUI {
         initialize();
         ((DefaultTableModel) table.getModel()).setRowCount(0);
         String resolvedCasesFile = "AlgorithmsSelectionCaseBase.csv";
-        Map<MetaFeature, Integer> simIntervals = detectSimIntervals(resolvedCasesFile);
-        autoAlgoSelector = new AutomaticAlgorithmSelector(new QueryManager(), new SimilarityManager(simIntervals));
         try {
+            Map<MetaFeature, Integer> simIntervals = detectSimIntervals(resolvedCasesFile);
+            AutomaticAlgorithmSelector.setTopKResults(5);
+            autoAlgoSelector = new AutomaticAlgorithmSelector(new QueryManager(), new SimilarityManager(simIntervals));
             autoAlgoSelector.configure();
         } catch (ExecutionException e) {
             e.printStackTrace();
+        } catch (IOException e){
+            e.printStackTrace();
+            System.exit(0);
         }
     }
 
@@ -85,8 +89,8 @@ public class AlgorithmSelectionUI {
      * Initialize the contents of the frame.
      */
     private void initialize() {
-        frame = new JFrame("Automatic Algorithm Selector");
-        frame.setBounds(100, 100, 800, 600);
+        frame = new JFrame("Automatic Algorithm Selection");
+        frame.setBounds(100, 100, 1200, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         statusBar = new StatusBar();
@@ -170,15 +174,15 @@ public class AlgorithmSelectionUI {
                     statusBar.setText("Processing "+datasetFile+" please wait...");
                     Map<String, String> options = new HashMap<String, String>();
                     if(chckbxDirectoryonly.isSelected()){
-                        options.put("datasetPath", datasetFile);
-                        options.put("datasetFile", "");
+                        options.put("dataset_dir", datasetFile);
+                        options.put("dataset_file", "");
                         options.put("mode", "multi");
                     }else{
-                        options.put("datasetPath", "");
-                        options.put("datasetFile", datasetFile);
+                        options.put("dataset_dir", "");
+                        options.put("dataset_file", datasetFile);
                         options.put("mode", "single");
                     }
-                    options.put("outputDirectory", singleOutputDirectory);
+                    options.put("output_dir", singleOutputDirectory);
                     
                     MetaFeatureExtractor mfe = new MetaFeatureExtractor( options ); 
                     Thread mfeThread = new Thread(mfe);
@@ -209,7 +213,7 @@ public class AlgorithmSelectionUI {
         inputTablePanel.setLayout(null);
         
         JScrollPane scrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBounds(0, 22, 779, 362);
+        scrollPane.setBounds(0, 22, 1179, 362);
         inputTablePanel.add(scrollPane);
         
         table = new JTable();
@@ -256,7 +260,7 @@ public class AlgorithmSelectionUI {
         return (DefaultTableModel) table.getModel();
     }
     
-    public Map<MetaFeature, Integer> detectSimIntervals(String resolvedCasesFile){
+    public Map<MetaFeature, Integer> detectSimIntervals(String resolvedCasesFile) throws IOException{
         Map<MetaFeature, Integer> intervals = null;
         BufferedReader br = null;
         try {
@@ -296,6 +300,7 @@ public class AlgorithmSelectionUI {
             br.close();
         } catch (IOException e) {
             LOG.error("Error: {}", e.getMessage());
+            throw e;
         }
         
         return intervals;

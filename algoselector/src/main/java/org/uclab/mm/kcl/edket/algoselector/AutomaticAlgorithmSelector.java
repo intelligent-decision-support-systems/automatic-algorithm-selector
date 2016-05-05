@@ -36,7 +36,7 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     QueryManager queryManager;
     SimilarityManager similarityManager;
     
-    public static final int TOP_K_RESULTS = 3;
+    public static int TOP_K_RESULTS = 3;
     
     public AutomaticAlgorithmSelector(){
     }
@@ -109,11 +109,8 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
         LOG.debug("RETRIEVE:  Similar cases");
         for(RetrievalResult rr : eval){
             if(selectedcases.contains(rr.get_case())){
-                CaseDescription retrievedCase = (CaseDescription) rr.get_case().getDescription();
-                
-                String description = retrievedCase.toString();
-                String retriveRow = rr.get_case()+"";
-                retriveRow += " :: similarity:  " + rr.getEval(); 
+    
+                String retriveRow = rr.get_case() + ", similarity ::  " + rr.getEval();
                 LOG.debug(retriveRow);
                 
                 JLabel label = new JLabel(retriveRow);
@@ -161,5 +158,13 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
         //. jcolibri.method.retain.StoreCasesMethod.storeCase(casebase, bestCase);
         
         LOG.debug("Component size: " + resultModel.getRetrievePanel().getComponentCount());
+    }
+    
+    /**
+     * sets number of top similar results to be retrieve, during match 
+     * @param int k
+     */
+    public static void setTopKResults(int k){
+        TOP_K_RESULTS = k;
     }
 }

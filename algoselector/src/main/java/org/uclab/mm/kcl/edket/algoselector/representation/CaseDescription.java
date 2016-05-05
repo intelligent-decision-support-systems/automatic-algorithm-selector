@@ -286,7 +286,8 @@ public class CaseDescription implements CaseComponent {
 
     @Override
     public String toString() {
-        return "CaseDescription [MeanSkewnessOfNumericAtts="
+        return "CaseDescription [CaseID=" + CaseID + ", "
+                + "MeanSkewnessOfNumericAtts="
                 + MeanSkewnessOfNumericAtts + ", MeanKurtosisOfNumericAtts="
                 + MeanKurtosisOfNumericAtts + ", MeanStdDevOfNumericAtts="
                 + MeanStdDevOfNumericAtts + ", MeanMeansOfNumericAtts="

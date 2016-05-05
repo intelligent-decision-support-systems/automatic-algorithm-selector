@@ -12,7 +12,7 @@ public class QueryManager {
      public CBRQuery getQuery(Map<MetaFeature, Object> queryCase){
          CaseDescription caseDescription = new CaseDescription();
          for(MetaFeature key : queryCase.keySet()){
-             double value = ((Number)queryCase.get(key)).doubleValue();
+             double value = (Double)queryCase.get(key);
              setMetaDescription(key, value, caseDescription);
          }         
         

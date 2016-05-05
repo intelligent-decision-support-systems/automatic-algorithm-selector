@@ -61,8 +61,18 @@ public class MetaFeatureExtractor implements Runnable {
     private String exportCsvPath;
     private Map<String, String> options;
     
-    public MetaFeatureExtractor( Map<String, String> appOptions ){
-        this.options = appOptions;
+    /**
+     * Instantiates MetaFeatureExtractor with options, some of the required options are:
+     * 
+     *  dataset_dir : dataset directory :- will extract features from all files within this directory
+     *  dataset_file : dataset file :- single data set file path
+     *  output_dir : output directory :- path to directory where final results will store.
+     *  mode : mode of extraction :- possible values : single (for single file), multi (for directory)
+     *  
+     * @param options
+     */
+    public MetaFeatureExtractor( Map<String, String> options ){
+        this.options = options;
         window_size = null;
         metaFeatures = new ArrayList<Map<String, Double>>();
     }
@@ -129,6 +139,7 @@ public class MetaFeatureExtractor implements Runnable {
         filter.setInputFormat(dataset);
         return Filter.useFilter(dataset, filter);
     }
+    
     public void exportToCsv(List<Quality> qualities, String filePath, String fileName, boolean SINGLE_MODE, boolean ADD_HEADER){
         
         final String COMMA_DELIMITER = ",";
@@ -190,18 +201,21 @@ public class MetaFeatureExtractor implements Runnable {
             }
         }
     }
-    @Override
-    public void run() {
-        
+    /**
+     * Extracts meta features, and stores them in metaFeatures map.
+     * you can then call method getMetaFeatures() to get extracted meta features.
+     * 
+     */
+    public void extractMetaFeatures(){
         try{
             boolean singleMode = options.get("mode").equals("single") ? true : false;
             
-            this.exportCsvPath = options.get("outputDirectory")+"_"+System.currentTimeMillis()+".csv";
+            this.exportCsvPath = options.get("output_dir")+"_"+System.currentTimeMillis()+".csv";
             File folder = null;
             File[] fileList = null;
             
             if(!singleMode){
-                folder = new File(options.get("datasetPath"));
+                folder = new File(options.get("dataset_dir"));
                 fileList = folder.listFiles();
             }
             
@@ -237,11 +251,11 @@ public class MetaFeatureExtractor implements Runnable {
             batchCharacterizers = ArrayUtils.add( batchCharacterizers, new GenericLandmarker( "SVM", "weka.classifiers.functions.SMO", 2, smoPolyOptions ) );
             
             if(singleMode){
-                AlgorithmSelectionUI.setStatusMessage("Extracting qualities from: "+options.get("datasetFile"), true);
-                LOG.debug("Extracting qualities from: "+options.get("datasetFile"));
-                List<Quality> exquality = extractFeatures( options.get("datasetFile"), window_size );
+                AlgorithmSelectionUI.setStatusMessage("Extracting qualities from: "+options.get("dataset_file"), true);
+                LOG.debug("Extracting qualities from: "+options.get("dataset_file"));
+                List<Quality> exquality = extractFeatures( options.get("dataset_file"), window_size );
                 LOG.debug("Writing qualities to table");
-                File temp = new File(options.get("datasetFile"));
+                File temp = new File(options.get("dataset_file"));
                 exportToCsv(exquality, exportCsvPath,temp.getName(), true, true);
                 LOG.debug("Done. Result is stored in: "+exportCsvPath);
                 AlgorithmSelectionUI.setStatusMessage("Done", true);
@@ -266,9 +280,17 @@ public class MetaFeatureExtractor implements Runnable {
         }catch(Exception ex){
             ex.printStackTrace();
         }
-
     }
     
+    @Override
+    public void run() {
+        extractMetaFeatures();
+    }
+    /**
+     * returns extracted meta features
+     * 
+     * @return metaFeatures
+     */
     public List<Map<String, Double>> getMetaFeatures(){
         return this.metaFeatures;
     }
