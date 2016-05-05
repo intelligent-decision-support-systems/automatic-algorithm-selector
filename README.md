@@ -6,7 +6,7 @@ Automatic Algorithm Selection Using Case Based Reasoning
 
 #### Prerequisites
 * download `jColibri v2.1` 
-* create `lib` directory inside the algoselector directory and add jColibri v2.1 inside that directory e.g. `algoselector/lib/jcolibri2.jar`
+* create `lib` directory in `algoselector` and add jColibri v2.1 inside e.g. `algoselector/lib/jcolibri2.jar`
 * after that run the following command from `algoselector` directory
 * `mvn install:install-file -Dfile=lib/jcolibri2.jar -DgroupId=jcolibri -DartifactId=jcolibri -Dversion=2.1 -Dpackaging=jar`
 
