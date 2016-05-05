@@ -6,9 +6,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class InputCaseBuilder {
-
+    private static Logger LOG = LogManager.getLogger(InputCaseBuilder.class);
+    
     private String inputCaseFile = "inputCBRCases.txt";
     private String metaFeatureFile = "AlgorithmsSelectionCaseBase.csv";
 
@@ -64,7 +70,61 @@ public class InputCaseBuilder {
             throw e;
         }
     }
-
+    
+    /**
+     * Detects and returns Interval value from the resolvedCasesFile.
+     * 
+     * @param resolvedCasesFile
+     * @return Map intervals
+     * @throws IOException
+     */
+    public static Map<MetaFeature, Integer> detectSimIntervals(String resolvedCasesFile) throws IOException{
+        
+        Map<MetaFeature, Integer> intervals = null;
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(resolvedCasesFile));
+            intervals = new HashMap<MetaFeature, Integer>();
+            //. initialize intervals with minimum values
+            for(MetaFeature mf : MetaFeature.values()){
+                intervals.put(mf, Integer.MIN_VALUE);
+            }
+            
+            String line = null;
+            boolean heading = true;
+            String[] columnNames = null;
+            while((line = br.readLine()) != null){
+                if(line.isEmpty()){continue;}
+                line = line.substring(line.indexOf(",") + 1);
+                line = line.replaceAll(",,+.*", "");
+                line = line.substring(0, line.lastIndexOf(","));
+                if(heading){
+                    heading = false;
+                    columnNames = line.split(",");
+                    continue;
+                }
+                
+                String[] columnValues = line.split(",");
+                for(int i=0; i<columnNames.length; i++){
+                    String column = columnNames[i].trim();
+                    double v = Double.parseDouble(columnValues[i]);
+                    int value = (int) v;
+                    
+                    MetaFeature mf = MetaFeature.valueOf(column);
+                    if(intervals.get(mf) < value ){
+                        intervals.put(mf, value);
+                    }
+                }
+            }
+            br.close();
+        } catch (IOException e) {
+            LOG.error("Error: {}", e.getMessage());
+            throw e;
+        }
+        
+        return intervals;
+    }
+    
     /**
      * builds input case file from extracted Meta Features File if append ==
      * TRUE then appends the new cases to the end of the existing input case

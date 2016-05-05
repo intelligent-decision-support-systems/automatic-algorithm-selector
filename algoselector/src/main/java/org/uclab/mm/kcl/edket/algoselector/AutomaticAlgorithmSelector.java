@@ -1,11 +1,8 @@
 package org.uclab.mm.kcl.edket.algoselector;
 
-import java.awt.Font;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.JLabel;
 
 import jcolibri.cbraplications.StandardCBRApplication;
 import jcolibri.cbrcore.Attribute;
@@ -25,18 +22,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.uclab.mm.kcl.edket.algoselector.mfe.MetaFeature;
 import org.uclab.mm.kcl.edket.algoselector.representation.CaseDescription;
-import org.uclab.mm.kcl.edket.algoselector.ui.AlgoSelectionResultsModel;
 
 public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     private static Logger LOG = LogManager.getLogger(AutomaticAlgorithmSelector.class);
 
-    Connector connector;
-    CBRCaseBase casebase;
+    private Connector connector;
+    private CBRCaseBase casebase;
     
-    QueryManager queryManager;
-    SimilarityManager similarityManager;
+    private QueryManager queryManager;
+    private SimilarityManager similarityManager;
     
     public static int TOP_K_RESULTS = 3;
+    
+    private Collection<RetrievalResult> evaluation;
+    private CBRQuery query;
     
     public AutomaticAlgorithmSelector(){
     }
@@ -69,7 +68,7 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
     @Override
     public void cycle(CBRQuery cbrQuery) throws ExecutionException {
         NNConfig simConfig = similarityManager.getSimilarityConfig();
-        doPerformCBRSteps(cbrQuery, simConfig);
+        evaluation = NNScoringMethod.evaluateSimilarity(casebase.getCases(), cbrQuery, simConfig);
     }
 
     @Override
@@ -83,59 +82,84 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
         return casebase;
     }
     
+    /**
+     * setQueryManager
+     * 
+     * @param queryManager
+     */
     public void setQueryManager(QueryManager queryManager){
         this.queryManager = queryManager;
     }
+    
+    /**
+     * setSimilarityManager
+     * 
+     * @param similarityManager
+     */
     public void setSimilarityManager(SimilarityManager similarityManager){
         this.similarityManager = similarityManager;   
     }
     
-    public void buildRecommendation(Map<MetaFeature, Object> queryCase) throws ExecutionException {
-        CBRQuery query = queryManager.getQuery(queryCase);
+    /**
+     * evaluates similarity for the queryCase
+     * 
+     * @param queryCase
+     * @return AutomaticAlgorithmSelector
+     * @throws ExecutionException
+     */
+    public AutomaticAlgorithmSelector evaluateSimilarity(Map<MetaFeature, Object> queryCase) throws ExecutionException{
+        query = queryManager.getQuery(queryCase);
         cycle(query);
+        return this;
     }
     
-    private void doPerformCBRSteps(CBRQuery query, NNConfig simConfig) throws ExecutionException{
-        AlgoSelectionResultsModel resultModel = new AlgoSelectionResultsModel();
-        Thread modelThread = new Thread(resultModel);
-        modelThread.setDaemon(true);
-        modelThread.start(); 
-        
-        /********* Execute NN ************/
-        Collection<RetrievalResult> eval = NNScoringMethod.evaluateSimilarity(casebase.getCases(), query, simConfig);
-        
-        /********* Select cases **********/
-        Collection<CBRCase> selectedcases = SelectCases.selectTopK(eval, TOP_K_RESULTS);
+    /**
+     * returns top K most similar cases from resolved cases
+     * 
+     * @param k
+     * @return Collection<CBRCase>
+     */
+    public Collection<CBRCase> retrieveTopKResults(int k){
+        Collection<CBRCase> selectedcases = SelectCases.selectTopK(evaluation, k);
         LOG.debug("RETRIEVE:  Similar cases");
-        for(RetrievalResult rr : eval){
+        for(RetrievalResult rr : evaluation){
             if(selectedcases.contains(rr.get_case())){
-    
                 String retriveRow = rr.get_case() + ", similarity ::  " + rr.getEval();
                 LOG.debug(retriveRow);
-                
-                JLabel label = new JLabel(retriveRow);
-                label.setFont(new Font("Verdana", Font.PLAIN, 12));
-                resultModel.getRetrievePanel().add(label);
             }
         }
         
-        /********* Reuse **********/
-        //Combine query description with cases solutions, obtaining a list of new cases.
-        Collection<CBRCase> newcases = CombineQueryAndCasesMethod.combine(query, selectedcases);
-        LOG.debug("REUSE: Map the solution from the previous case to the target problem, Combined cases");
-        for(jcolibri.cbrcore.CBRCase c: newcases){
+        return selectedcases;
+    }
+    
+    /**
+     * Combine query description with cases solutions, obtaining a list of new cases.
+     * 
+     * @param query
+     * @param selectedcases
+     * @return Collection<CBRCase>
+     */
+    public Collection<CBRCase> combineQueryAndCaseMethod(Collection<CBRCase> selectedcases){
+        Collection<CBRCase> newCases = CombineQueryAndCasesMethod.combine(query, selectedcases);
+        
+        LOG.debug("REUSE:  Similar cases");
+        for(jcolibri.cbrcore.CBRCase c: newCases){
             LOG.debug(c);
             CaseDescription cd = (CaseDescription) c.getDescription();
             LOG.debug(cd);
-            
-            JLabel label = new JLabel(c+"");
-            label.setFont(new Font("Verdana", Font.PLAIN, 12));
-            resultModel.getReusePanel().add(label);
         }
-        
-        
-        /********* Revise **********/
-        // Lets store only the best case
+        return newCases;
+    }
+    
+    /**
+     * returns the best case from the retrieved cases
+     * 
+     * @param newcases
+     * @return CBRCase
+     * @throws ExecutionException
+     */
+    public CBRCase getBestCase(Collection<CBRCase> newcases) throws ExecutionException{
+   
         CBRCase bestCase = newcases.iterator().next();
         Integer newCaseId = casebase.getCases().size() + 1;
         
@@ -143,23 +167,40 @@ public class AutomaticAlgorithmSelector implements StandardCBRApplication {
         HashMap<Attribute, Object> componentsKeys = new HashMap<Attribute, Object>();
         componentsKeys.put(new Attribute("CaseID", CaseDescription.class), newCaseId);  
         jcolibri.method.revise.DefineNewIdsMethod.defineNewIdsMethod(bestCase, componentsKeys);
-               
-        LOG.debug("REVISE: Cases with new Id");
-        LOG.debug("do you want to RETAIN this solution?");
+        
+        LOG.debug("REVISE:  best case with new ID");
         LOG.debug(bestCase);
         
-        JLabel label = new JLabel(bestCase+"");
-        label.setFont(new Font("Verdana", Font.PLAIN, 12));
-        resultModel.getRevisePanel().add(label);
-        
-        /********* Retain **********/
-        LOG.debug("RETAIN: Save Case for future use?");
-        // Uncomment next line to store cases into persistence
-        //. jcolibri.method.retain.StoreCasesMethod.storeCase(casebase, bestCase);
-        
-        LOG.debug("Component size: " + resultModel.getRetrievePanel().getComponentCount());
+        return bestCase;
     }
     
+    /**
+     * Lets store only the best case
+     * 
+     * @param bestCase
+     */
+    public void retainCase(CBRCase bestCase){
+        LOG.debug("RETAIN:  case for future use");
+        jcolibri.method.retain.StoreCasesMethod.storeCase(casebase, bestCase);
+    }
+    
+    /**
+     * returns instance of CBRQuery
+     * 
+     * @return CBRQuery
+     */
+    public CBRQuery getQuery(){
+        return this.query;
+    }
+    
+    /**
+     * returns collection of retrieved results.
+     * 
+     * @return Collection<RetrievalResult> retrievalResult
+     */
+    public Collection<RetrievalResult> getEvaluationList(){
+        return evaluation;
+    }
     /**
      * sets number of top similar results to be retrieve, during match 
      * @param int k

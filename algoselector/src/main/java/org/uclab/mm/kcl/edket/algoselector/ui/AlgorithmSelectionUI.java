@@ -3,6 +3,7 @@ package org.uclab.mm.kcl.edket.algoselector.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -10,6 +11,7 @@ import java.awt.event.ItemListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -26,7 +29,9 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import jcolibri.cbrcore.CBRCase;
 import jcolibri.exception.ExecutionException;
+import jcolibri.method.retrieve.RetrievalResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +41,7 @@ import org.uclab.mm.kcl.edket.algoselector.SimilarityManager;
 import org.uclab.mm.kcl.edket.algoselector.mfe.InputCaseBuilder;
 import org.uclab.mm.kcl.edket.algoselector.mfe.MetaFeature;
 import org.uclab.mm.kcl.edket.algoselector.mfe.MetaFeatureExtractor;
+import org.uclab.mm.kcl.edket.algoselector.representation.CaseDescription;
 
 public class AlgorithmSelectionUI {
     private static Logger LOG = LogManager.getLogger(AlgorithmSelectionUI.class);
@@ -129,7 +135,8 @@ public class AlgorithmSelectionUI {
                         queryCase.put(columnName, columnValue);
                     }
                     
-                    autoAlgoSelector.buildRecommendation(queryCase);
+                    generateRecommendation(queryCase);
+                    //. autoAlgoSelector.buildRecommendation(queryCase);
                     statusBar.setMessage("Done.");
                 } catch (ExecutionException e) {
                     e.printStackTrace();
@@ -164,38 +171,16 @@ public class AlgorithmSelectionUI {
                 tblModel.setRowCount(0);
                 String datasetFile = textField.getText();
                 
-                String singleOutputDirectory = "output/";
+                String outputDirectory = "output/";
                 if(datasetFile == null || datasetFile.isEmpty()){
                     statusBar.setText("Please Enter Dataset Path.");
                     return;
                 }
                 
-                try{
-                    statusBar.setText("Processing "+datasetFile+" please wait...");
-                    Map<String, String> options = new HashMap<String, String>();
-                    if(chckbxDirectoryonly.isSelected()){
-                        options.put("dataset_dir", datasetFile);
-                        options.put("dataset_file", "");
-                        options.put("mode", "multi");
-                    }else{
-                        options.put("dataset_dir", "");
-                        options.put("dataset_file", datasetFile);
-                        options.put("mode", "single");
-                    }
-                    options.put("output_dir", singleOutputDirectory);
-                    
-                    MetaFeatureExtractor mfe = new MetaFeatureExtractor( options ); 
-                    Thread mfeThread = new Thread(mfe);
-                    mfeThread.setDaemon(true);
-                    mfeThread.start();
-                    
-                    //. mfeThread.join();
-                    //. populateTableModel(mfe.getMetaFeatures());
-                    //. statusBar.setText("Done.");
-                }catch(Exception ex){
-                    LOG.error("error: {}", ex.getMessage());
-                    statusBar.setText("Error: " + ex.getMessage());
-                }
+                MetaFeatureExtractorRunnable mfeRunnable = new MetaFeatureExtractorRunnable(datasetFile, outputDirectory, chckbxDirectoryonly.isSelected());
+                Thread mfeThread = new Thread(mfeRunnable);
+                mfeThread.setDaemon(true);
+                mfeThread.start();
             }
         });
         btnExtractmeta.setBounds(274, 46, 152, 23);
@@ -241,7 +226,7 @@ public class AlgorithmSelectionUI {
         statusBar.setMessage(msg);
     }
     
-    public void populateTableModel(List<Map<String, Double>> featureList){
+    public static void populateTableModel(List<Map<String, Double>> featureList){
         for(Map<String, Double> xFeatures : featureList){
             addTableRow(xFeatures);
         }
@@ -304,5 +289,97 @@ public class AlgorithmSelectionUI {
         }
         
         return intervals;
+    }
+    
+    public void generateRecommendation(Map<MetaFeature, Object> queryCase) throws ExecutionException{
+        
+        AlgoSelectionResultsModel resultModel = new AlgoSelectionResultsModel();
+        Thread modelThread = new Thread(resultModel);
+        modelThread.setDaemon(true);
+        modelThread.start(); 
+       
+        /********* Select cases **********/
+        Collection<CBRCase> selectedCases = autoAlgoSelector.evaluateSimilarity(queryCase)
+                        .retrieveTopKResults(3);
+        
+        LOG.debug("RETRIEVE:  Similar cases");
+        for(RetrievalResult rr : autoAlgoSelector.getEvaluationList()){
+            if(selectedCases.contains(rr.get_case())){
+    
+                String retriveRow = rr.get_case() + ", similarity ::  " + rr.getEval();
+                LOG.debug(retriveRow);
+                
+                JLabel label = new JLabel(retriveRow);
+                label.setFont(new Font("Verdana", Font.PLAIN, 12));
+                resultModel.getRetrievePanel().add(label);
+            }
+        }
+        
+        /********* Reuse **********/
+        Collection<CBRCase> newCases = autoAlgoSelector.combineQueryAndCaseMethod(selectedCases);
+        
+        LOG.debug("REUSE: Map the solution from the previous case to the target problem, Combined cases");
+        for(jcolibri.cbrcore.CBRCase c: newCases){
+            LOG.debug(c);
+            CaseDescription cd = (CaseDescription) c.getDescription();
+            LOG.debug(cd);
+            
+            JLabel label = new JLabel(c+"");
+            label.setFont(new Font("Verdana", Font.PLAIN, 12));
+            resultModel.getReusePanel().add(label);
+        }
+        
+        /********* Revise **********/
+        CBRCase bestCase = autoAlgoSelector.getBestCase(newCases);
+        LOG.debug(bestCase);
+        
+        JLabel label = new JLabel(bestCase+"");
+        label.setFont(new Font("Verdana", Font.PLAIN, 12));
+        resultModel.getRevisePanel().add(label);
+        
+        
+        /********* Retain **********/
+        LOG.debug("RETAIN: Save Case for future use?");
+        //. autoAlgoSelector.retainCase(bestCase);
+        
+        LOG.debug("Component size: " + resultModel.getRetrievePanel().getComponentCount());
+    }
+    
+    private static class MetaFeatureExtractorRunnable implements Runnable {
+        private String datasetFile;
+        private boolean isDirectory;
+        private String outputDirectory;
+        
+        public MetaFeatureExtractorRunnable(String datasetFile, String outputDirectory, boolean isDirectory){
+            this.datasetFile = datasetFile;
+            this.outputDirectory = outputDirectory;
+            this.isDirectory = isDirectory;
+        }
+        @Override
+        public void run() {
+            try{
+                statusBar.setText("Processing "+datasetFile+" please wait...");
+                Map<String, String> options = new HashMap<String, String>();
+                if(isDirectory){
+                    options.put("dataset_dir", datasetFile);
+                    options.put("dataset_file", "");
+                    options.put("mode", "multi");
+                }else{
+                    options.put("dataset_dir", "");
+                    options.put("dataset_file", datasetFile);
+                    options.put("mode", "single");
+                }
+                options.put("output_dir", outputDirectory);
+                
+                MetaFeatureExtractor mfe = new MetaFeatureExtractor( options ); 
+                populateTableModel(mfe.extractMetaFeatures());
+                
+                statusBar.setText("Done.");
+            }catch(Exception ex){
+                LOG.error("error: {}", ex.getMessage());
+                statusBar.setText("Error: " + ex.getMessage());
+            }
+        }
+        
     }
 }
