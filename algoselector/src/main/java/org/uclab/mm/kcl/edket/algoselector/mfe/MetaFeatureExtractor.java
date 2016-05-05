@@ -29,6 +29,7 @@ import org.openml.webapplication.fantail.dc.statistical.NominalAttDistinctValues
 import org.openml.webapplication.fantail.dc.statistical.Statistical;
 import org.openml.webapplication.fantail.dc.stream.ChangeDetectors;
 //. import org.uclab.mm.kcl.edket.algoselector.ui.AlgorithmSelectionUI;
+import org.uclab.mm.kcl.edket.algoselector.ui.AlgorithmSelectionUI;
 
 import weka.core.Instances;
 import weka.core.OptionHandler;
@@ -159,10 +160,10 @@ public class MetaFeatureExtractor implements Runnable {
                 }
                 
             }
-            
-            //. add row
-            //. AlgorithmSelectionUI.addTableRow(xFeatures);
+     
             metaFeatures.add(xFeatures);
+            //. add row to table model
+            AlgorithmSelectionUI.addTableRow(xFeatures);
             
                 
             if(ADD_HEADER){
@@ -236,26 +237,30 @@ public class MetaFeatureExtractor implements Runnable {
             batchCharacterizers = ArrayUtils.add( batchCharacterizers, new GenericLandmarker( "SVM", "weka.classifiers.functions.SMO", 2, smoPolyOptions ) );
             
             if(singleMode){
+                AlgorithmSelectionUI.setStatusMessage("Extracting qualities from: "+options.get("datasetFile"), true);
                 LOG.debug("Extracting qualities from: "+options.get("datasetFile"));
                 List<Quality> exquality = extractFeatures( options.get("datasetFile"), window_size );
                 LOG.debug("Writing qualities to table");
                 File temp = new File(options.get("datasetFile"));
                 exportToCsv(exquality, exportCsvPath,temp.getName(), true, true);
                 LOG.debug("Done. Result is stored in: "+exportCsvPath);
+                AlgorithmSelectionUI.setStatusMessage("Done", true);
             }else{
                 boolean IS_FIRST_FILE = true;
                 LOG.debug("Looping through directory");
                 for( File dataset : fileList  ) {
                     if (dataset.isFile() && dataset.getName().endsWith(".arff")){
+                        AlgorithmSelectionUI.setStatusMessage("Extracting Qualities From: " +dataset.getName() + " please wait...", true);
                         LOG.debug("Extracting Qualities From: " +dataset.getName());
                         List<Quality> exquality = extractFeatures( dataset.getAbsolutePath(), window_size );
                         LOG.debug("Writing qualities to csv file");
                         exportToCsv(exquality, exportCsvPath, dataset.getName(), false, IS_FIRST_FILE);
                         IS_FIRST_FILE = false;
                         LOG.debug("Done.");
+                        AlgorithmSelectionUI.setStatusMessage("Done", true);
                     }
                 }
-                
+                AlgorithmSelectionUI.setStatusMessage("Done. Result is stored in: "+exportCsvPath, true);
                 LOG.debug("Done. Result is stored in: "+exportCsvPath);
             }
         }catch(Exception ex){

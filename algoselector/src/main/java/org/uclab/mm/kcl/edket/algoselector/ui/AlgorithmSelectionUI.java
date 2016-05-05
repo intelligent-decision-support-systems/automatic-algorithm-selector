@@ -185,9 +185,9 @@ public class AlgorithmSelectionUI {
                     mfeThread.setDaemon(true);
                     mfeThread.start();
                     
-                    mfeThread.join();
-                    populateTableModel(mfe.getMetaFeatures());
-                    statusBar.setText("Done.");
+                    //. mfeThread.join();
+                    //. populateTableModel(mfe.getMetaFeatures());
+                    //. statusBar.setText("Done.");
                 }catch(Exception ex){
                     LOG.error("error: {}", ex.getMessage());
                     statusBar.setText("Error: " + ex.getMessage());
