@@ -21,3 +21,5 @@ Automatic Algorithm Selection Using Case Based Reasoning
 #### How to Run
 * run `algoselector/run.sh` for **Linux/Mac**
 * run `algoselector/run.bat` for **Windows**
+
+Now you are good to play with it :)
